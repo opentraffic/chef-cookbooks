@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -e
+
+namespace="opentraffic/disk"
+metric_name="DiskSpaceUtilizationPercent"
+export namespace metric_name cache_file
+
+df -H | grep -vE '^Filesystem|tmpfs|cdrom|efs' | awk '{ print $5 " " $1 }' | while read output; do
+  echo $output
+  usep=$(echo $output | awk '{ print $1}' | cut -d'%' -f1  )
+  export partition=$(echo $output | awk '{ print $2 }' )
+
+  metric_key="<%= @public_ip %>_<%= @instance_id %>_$partition"
+  cache_key="/tmp/$(echo $metric_key | sed -e 's/\//_/g')"
+  alarm_name="df-percent-$metric_key"
+
+  case "$1" in
+    "shutdown")
+      echo "Removing cloudwatch alarms for $partition"
+      aws --region <%= @region %> cloudwatch delete-alarms \
+        --alarm-names $alarm_name
+
+      if [ -f $cache_key ]; then
+        rm $cache_key
+      fi
+      ;;
+
+    *)
+      echo "Pushing metric data to cloudwatch"
+      aws --region <%= @region %> cloudwatch put-metric-data \
+        --metric-name "$metric_name" \
+        --namespace "$namespace" \
+        --dimensions "Partition=$metric_key" \
+        --unit Percent \
+        --value "$usep"
+
+      if [ ! -f "$cache_key" ]; then
+        touch $cache_key
+
+        echo "Creating metric alarm for instance_id <%= @instance_id %>, partition $partition"
+        aws --region <%= @region %> cloudwatch put-metric-alarm \
+          --alarm-name "$alarm_name" \
+          --alarm-description "Disk space alarm" \
+          --namespace "$namespace" \
+          --metric-name "$metric_name" \
+          --statistic Average \
+          --period 300 \
+          --threshold <%= @disk_threshold %> \
+          --comparison-operator GreaterThanThreshold \
+          --dimensions "Name=Partition,Value=$metric_key" \
+          --evaluation-periods 3 \
+          --unit Percent \
+          --alarm-actions <%= @critical_sns_arn %> \
+          --ok-actions <%= @critical_sns_arn %> \
+          --insufficient-data-actions <%= @relaxed_sns_arn %>
+      fi
+
+      if [ $usep -ge <%= node[:monitoring_scripts][:disk_threshold] %> ]; then
+        output="$(hostname): disk space low on '$partition ($usep%)'"
+        echo $output
+      fi
+   esac
+done
