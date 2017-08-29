@@ -11,8 +11,9 @@ include_recipe 'get_osmlr_tiles::_setup'
 
 stack = search('aws_opsworks_stack').first
 
-execute 'pull tiles' do
+execute 'pull and uncompress tiles' do
   user 'root'
+  cwd  node[:get_osmlr_tiles][:tile_dir]
   command <<-EOH
     aws --region #{stack['region']} s3 cp \
       s3://#{node[:get_osmlr_tiles][:s3bucket]}/#{node[:get_osmlr_tiles][:s3path]}/#{node[:get_osmlr_tiles][:s3file]} #{node[:get_osmlr_tiles][:tile_dir]}/tiles.tgz &&
