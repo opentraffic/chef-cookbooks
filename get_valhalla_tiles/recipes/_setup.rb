@@ -1,5 +1,5 @@
 #
-# Cookbook Name:: get_osmlr_tiles
+# Cookbook Name:: get_valhalla_tiles
 # Recipe:: _setup
 #
 # Copyright 2017, Mapzen
@@ -9,9 +9,9 @@
 
 # set up directory structure
 dirs = [
-  node[:get_osmlr_tiles][:base_dir],
-  node[:get_osmlr_tiles][:log_dir],
-  node[:get_osmlr_tiles][:tile_dir]
+  node[:get_valhalla_tiles][:base_dir],
+  node[:get_valhalla_tiles][:log_dir],
+  node[:get_valhalla_tiles][:tile_dir]
 ]
 
 dirs.each do |dir|
