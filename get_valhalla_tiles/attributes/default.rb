@@ -3,4 +3,4 @@ default[:get_valhalla_tiles][:log_dir]  = "#{node[:get_valhalla_tiles][:base_dir
 default[:get_valhalla_tiles][:tile_dir] = "#{node[:get_valhalla_tiles][:base_dir]}/valhalla"
 
 default[:get_valhalla_tiles][:s3bucket]  = 'reporter-tiles'
-default[:get_valhalla_tiles][:s3file]    = 'planet_2017_08_26-00_34_30/planet_2017_08_26-00_34_30.tar'
+default[:get_valhalla_tiles][:s3file]    = 'planet_2018_03_19-11_17_33/planet_2018_03_19-11_17_33.tar'
